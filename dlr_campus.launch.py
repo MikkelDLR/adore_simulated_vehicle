@@ -12,44 +12,29 @@
 # ********************************************************************************
 
 from launch import LaunchDescription
-import os
-import sys
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if base_dir not in sys.path:
-    sys.path.insert(0, base_dir)
+from launch_ros.actions import Node
 
+import sys
+import os
+sys.path.append(os.path.dirname(__file__)) # this line is very importatnt to find the helper functions
+from simulated_vehicle import create_simulated_vehicle
+from simulation_visualizer import create_visualizer
+
+start_position_latitude = 52.315893
+start_position_longitude = 10.561526
+start_heading = 0.0
 
 def generate_launch_description():
-    from scenario_helpers.simulated_vehicle import create_simulated_vehicle_nodes
-    from scenario_helpers.visualizer import create_visualization_nodes
-    # Get the directory of this launch file
-    launch_file_dir = os.path.dirname(os.path.realpath(__file__))
-    map_image_folder = os.path.abspath(
-        os.path.join(launch_file_dir, "../assets/maps/"))
-    map_folder = os.path.abspath(os.path.join(
-        launch_file_dir, "../assets/tracks/"))
-    vehicle_param = os.path.abspath(os.path.join(
-        launch_file_dir, "../assets/vehicle_params/"))
-    map_file = map_folder + "/de_bs_borders_wfs.r2sr"
-    vehicle_model_file = vehicle_param + "/NGC.json"
-
     return LaunchDescription([
-        *create_visualization_nodes(
-            whitelist=["ego_vehicle"],
-            asset_folder=map_image_folder,
-            visualization_offset=(606440.120, 5797321.700),
-        ),
-
-        *create_simulated_vehicle_nodes(
+        *create_simulated_vehicle(
             namespace="ego_vehicle",
-            start_pose=(606440.120, 5797321.700, 0.0),
-            goal_position=(606471.04, 5797161.11),
-            map_file=map_file,
-            model_file=vehicle_model_file,
-            controllable=True,
-            v2x_id=0,
+            start_pose_lat_lon=(start_position_latitude, start_position_longitude, start_heading),
+            goal_position_lat_lon=(52.314444, 10.561929),
             vehicle_id=111,
-            controller=2,
-            debug=False
+            v2x_id=0,
+        ),
+        *create_visualizer(
+            whitelist=["ego_vehicle"],
+            visualization_offset_lat_lon=(start_position_latitude, start_position_longitude),
         )
     ])
